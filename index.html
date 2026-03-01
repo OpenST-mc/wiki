@@ -87,8 +87,8 @@
               <button @click="$refs.fileInput.click()" class="text-[10px] font-black border border-[#40B5AD]/30 px-3 py-1.5 rounded-md hover:bg-[#40B5AD]/10 text-[#40B5AD] transition-all">
                 + 上传并插入图片
               </button>
-              <span v-if="Object.keys(localImages).length > 0" class="text-[9px] text-slate-500 font-mono">
-                PENDING: {{ Object.keys(localImages).length }} FILES
+              <span v-if="localImages && Object.keys(localImages).length > 0" class="text-[9px] text-slate-500 font-mono">
+                  PENDING: {{ Object.keys(localImages).length }} FILES
               </span>
             </div>
           </div>

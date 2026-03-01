@@ -49,15 +49,16 @@ createApp({
         const createWikiRenderer = (baseDir) => {
             const renderer = new marked.Renderer();
             renderer.image = (href, title, text) => {
+                if (!href) return '';
                 let src = href;
                 const fileName = href.split('/').pop();
 
-                // 优先检查本地缓存
-                if (imagePreviews.value[fileName]) {
+                // 使用 ?. 防止 imagePreviews.value 为空时崩溃
+                if (imagePreviews.value?.[fileName]) {
                     src = imagePreviews.value[fileName];
                 } else if (!href.startsWith('http') && !href.startsWith('blob:')) {
-                    // 补全相对路径
-                    src = `wiki_content/${baseDir}${href.replace('./', '')}`;
+                    const dir = baseDir ? baseDir.replace(/\/$/, '') + '/' : '';
+                    src = `wiki_content/${dir}${href.replace('./', '')}`;
                 }
                 return `<div class="img-container"><img src="${src}" alt="${text||''}"><p class="img-caption">${text||''}</p></div>`;
             };
