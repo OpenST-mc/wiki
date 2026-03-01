@@ -1,0 +1,21 @@
+{
+  "name": "openst-wiki",
+  "version": "1.0.0",
+  "description": "OpenST 档案馆 - 维基分部",
+  "main": "index.html",
+  "scripts": {
+    "build:index": "node gen-wiki-index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "OpenST",
+    "Wiki",
+    "Archive"
+  ],
+  "author": "OpenST Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "wiki-001",
+    "title": "test!",
+    "summary": "欢迎来到 OpenST 档案馆，这是你的第一步。",
+    "tags": [
+      "教学",
+      "基础"
+    ],
+    "date": "2026-03-01",
+    "cover": "wiki_content/test!/images/cover.jpg",
+    "mdPath": "wiki_content/test!/test.md",
+    "baseDir": "test!/",
+    "searchText": "# 欢迎 这就是正文内容了。 ```python import os import json from flask import Blueprint, render_template, request, redirect, url_for, flash main_bp = Blueprint(\"main\", __name__) DATA_DIR_VIP = \"data/vip\" DATA_DIR_NONVIP = \"data/non-vip\" def get_user_path(name): for folder in [DATA_DIR_VIP, DATA_DIR_NONVIP]: path = os.path.join(folder, f\"{name}.plist\") if os.path.exists(path): return path return None # ·········更多不举例 ``` | 姓名 | 年龄 | 城市 "
+  }
+]
