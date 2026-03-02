@@ -1,0 +1,48 @@
+name: Sync Wiki Index
+
+on:
+  push:
+    branches:
+      - main
+    # 💡 核心：只有这个路径下的文件变动，才会触发运行
+    paths:
+      - 'wiki_content/**'
+  workflow_dispatch: # 允许手动点击运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: |
+
+      - name: Run Wiki Scanner
+        run: node gen-wiki-index.js 
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action [Bot]"
+          
+          # 检查是否有文件更新（wiki.json 或 自动补全了 ID 的 md 文件）
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "chore: 自动同步 Wiki 索引与固化 ID [skip ci]"
+            git push
+          else
+            echo "No changes to commit"
+          fi
