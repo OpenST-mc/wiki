@@ -138,6 +138,9 @@ createApp({
         const isAdmin = ref(false);
         const isEditing = ref(false);
         const isSubmitting = ref(false);
+        const editTitle = ref('');
+        const editSummary = ref('');
+        const editTags = ref('');
 
         // 💡 图片处理核心仓库
         const localImages = ref({});     // { "name.png": FileObject }
@@ -281,23 +284,23 @@ createApp({
         const loadArticle = async (item) => {
             window.NProgress?.start();
             try {
-                globalBaseDir = item.baseDir; // 💡 同步当前路径
-                globalImagePreviews.value = imagePreviews.value; // 💡 同步预览图引用
-
                 const res = await fetch(`./${item.mdPath}`);
                 const rawMd = await res.text();
-                editContent.value = rawMd;
-                const contentOnly = rawMd.replace(/^===\s*[\s\S]*?\s*===\s*/, '');
 
-                // 此时 marked.parse 会直接调用我们定义的 extension.renderer
-                renderedContent.value = marked.parse(contentOnly);
+                // 解析 YAML (简单正则解析)
+                const metaMatch = rawMd.match(/^===\s*([\s\S]*?)\s*===\s*/);
+                if (metaMatch) {
+                    const metaStr = metaMatch[1];
+                    editTitle.value = metaStr.match(/title:\s*(.*)/)?.[1] || item.title;
+                    editSummary.value = metaStr.match(/summary:\s*(.*)/)?.[1] || item.summary;
+                    editTags.value = metaStr.match(/tags:\s*\[(.*)\]/)?.[1] || (item.tags || []).join(', ');
+                }
+
+                editContent.value = rawMd.replace(/^===\s*[\s\S]*?\s*===\s*/, ''); // 只保留正文
                 activeArticle.value = item;
                 isEditing.value = false;
-                if (scrollRoot.value) scrollRoot.value.scrollTop = 0;
-            } catch (e) { console.error("Load article failed:", e);
-            } finally {
-                window.NProgress?.done();
-            }
+            } catch (e) { console.error(e); }
+            finally { window.NProgress?.done(); }
         };
 
         const handleImageUpload = (e) => {
@@ -324,6 +327,13 @@ createApp({
         };
 
         const submitArchive = async () => {
+            const newHeader =
+                `===
+                title: ${editTitle.value}
+                summary: ${editSummary.value}
+                tags: [${editTags.value}]
+                ===`;
+            const fullContent = newHeader + editContent.value;
             if (!editContent.value || !auth.value) return;
             isSubmitting.value = true;
             try {
@@ -480,6 +490,9 @@ createApp({
             changePage,
             jumpToPage,
             inputPage,
+            fileInput,
+            editTitle, editSummary, editTags,
+            converterS2T, converterT2S,
         };
     }
 }).mount('#app');
