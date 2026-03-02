@@ -327,29 +327,37 @@ createApp({
         };
 
         const submitArchive = async () => {
-            const newHeader =
-                `===
-                title: ${editTitle.value}
-                summary: ${editSummary.value}
-                tags: [${editTags.value}]
-                ===`;
-            const fullContent = newHeader + editContent.value;
-            if (!editContent.value || !auth.value) return;
+            // 基础校验
+            if (!editTitle.value.trim() || !editContent.value.trim() || !auth.value) {
+                alert("标题和内容不能为空，且需登录 GitHub");
+                return;
+            }
             isSubmitting.value = true;
+
             try {
                 const zip = new JSZip();
                 const item = activeArticle.value;
-                // 规范文件夹命名
-                const folderName = item ? item.baseDir.replace(/\//g, '') : `new-wiki-${Date.now()}`;
-                const fileName = item ? item.mdPath.split('/').pop() : 'index.md';
+                const userName = auth.value.user?.login || 'Explorer';
 
-                // 创建主文件夹
+                // 1. 确定文件夹和文件名逻辑
+                const folderName = item ? item.baseDir.replace(/\//g, '') : `archive-${Date.now()}`;
+                const fileName = item ? item.mdPath.split('/').pop() : 'index.md';
                 const root = zip.folder(folderName);
 
-                // 1. 写入 Markdown
-                root.file(fileName, editContent.value);
+                // 2. 拼接固定 Markdown 文本 (注意：左侧不要留缩进，否则 YAML 解析会报错)
+                const fullContent = `===
+title: ${editTitle.value.trim()}
+summary: ${item?.summary || editTitle.value.trim()}
+tags: [${(item?.tags || ['档案']).join(', ')}]
+cover: ${item?.cover || ''}
+===
 
-                // 2. 💡 创建 images 文件夹并塞入图片
+${editContent.value}`;
+
+                // 3. 写入文件
+                root.file(fileName, fullContent);
+
+                // 4. 处理图片附件
                 if (Object.keys(localImages.value).length > 0) {
                     const imgFolder = root.folder("images");
                     for (const [name, fileObj] of Object.entries(localImages.value)) {
@@ -357,12 +365,30 @@ createApp({
                     }
                 }
 
+                // 5. 构建专业且清晰的 Issue 文案
+                const actionType = item ? "修正" : "新投稿";
+                const issueTitle = `[Wiki ${actionType}] ${editTitle.value} - @${userName}`;
+                const issueBody = `
+                   ### 📝 Wiki 档案提交报告
+
+                   - **操作类型**: ${actionType}
+                   - **文章标题**: ${editTitle.value}
+                   - **贡献者**: @${userName}
+                   - **目标路径**: \`${item ? item.mdPath : folderName + '/' + fileName}\`
+                   - **提交时间**: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })} (UTC+8)
+
+                   ---
+                   > 该 Issue 由 OpenST Wiki 编辑器自动生成。
+                   `.trim();
+
+                // 6. 准备发送
                 const blob = await zip.generateAsync({ type: "blob" });
                 const fd = new FormData();
-                fd.append('file', blob, 'archive_update.zip');
-                fd.append('user', auth.value.user?.login || 'Explorer');
-                fd.append('title', item ? `[修正] ${item.title}` : `[新投稿] 未命名`);
-                fd.append('path', item ? item.mdPath : 'root/new_archive');
+                fd.append('file', blob, 'wiki_update.zip');
+                fd.append('user', userName);
+                fd.append('title', issueTitle); // Issue 标题
+                fd.append('body', issueBody);   // Issue 正文 (需 Worker 支持接收 body 字段)
+                fd.append('path', item ? item.mdPath : `${folderName}/${fileName}`);
 
                 const res = await fetch(`${WORKER_URL}/api/wiki/submit-archive`, {
                     method: 'POST',
@@ -372,16 +398,33 @@ createApp({
 
                 const data = await res.json();
                 if (data.success) {
-                    alert(`✅ 提交成功！已创建 Issue #${data.issueNumber}，待staff审核后进行处理`);
+                    alert(`✅ 提交成功！\n已创建 Issue #${data.issueNumber}\n请等待 Staff 审核处理。`);
+                    isEditing.value = false;
+                    // 清理状态
                     localImages.value = {};
                     Object.values(imagePreviews.value).forEach(URL.revokeObjectURL);
                     imagePreviews.value = {};
-                    isEditing.value = false;
-                } else { throw new Error(data.error || "Submission Failed"); }
+                } else {
+                    throw new Error(data.error || "提交失败");
+                }
             } catch (e) {
                 alert(`❌ 错误: ${e.message}`);
             } finally {
                 isSubmitting.value = false;
+            }
+        };
+
+
+        const toggleEdit = () => {
+            if (!auth.value) return handleLogin();
+
+            // 如果是从列表页点“新建文章”（此时 activeArticle 为空）
+            if (!activeArticle.value && !isEditing.value) {
+                editTitle.value = "";
+                editContent.value = "";
+                isEditing.value = true;
+            } else {
+                isEditing.value = !isEditing.value;
             }
         };
 
@@ -441,7 +484,7 @@ createApp({
             if (main) {
                 main.scrollTo({
                     top: 0,
-                    behavior: 'smooth' // 这种平滑滚动非常有高级感
+                    behavior: 'smooth'
                 });
             }
         };
@@ -490,7 +533,6 @@ createApp({
             changePage,
             jumpToPage,
             inputPage,
-            fileInput,
             editTitle, editSummary, editTags,
             converterS2T, converterT2S,
         };
