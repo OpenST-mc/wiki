@@ -353,3 +353,60 @@ input:focus {
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* --- 移动端导航栏专用适配 --- */
+@media (max-width: 768px) {
+    /* 1. 缩小整体内边距，释放左右空间 */
+    nav.fixed .max-w-7xl {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    /* 2. Logo 文字瘦身：隐藏 "OpenST"，仅保留 "Wiki" */
+    .nav-logo-text span:first-child {
+        display: none;
+    }
+    .nav-logo-text {
+        font-size: 1.1rem !important;
+        letter-spacing: 0.5px;
+    }
+
+    /* 3. 搜索框动态缩放：默认变短，聚焦时拉长 */
+    .search-container {
+        max-width: 100px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .search-container:focus-within {
+        max-width: 140px;
+        position: relative;
+        z-index: 60;
+    }
+    .search-container input {
+        padding-left: 2rem !important; /* 给搜索图标留位 */
+        font-size: 0.85rem !important;
+    }
+
+    /* 4. 按钮文字隐藏：仅显示图标 */
+    .nav-btn-text {
+        display: none;
+    }
+
+    .nav-btn {
+        padding: 0.6rem !important;
+        min-width: 38px;
+        justify-content: center;
+        border-radius: 12px !important; /* 手机端圆角更柔和 */
+    }
+
+    /* 5. 间距微调 */
+    .nav-right-zone {
+        gap: 0.4rem !important;
+    }
+}
+
+/* 电脑端恢复间距 */
+@media (min-width: 769px) {
+    .nav-btn i {
+        margin-right: 0.5rem;
+    }
+}

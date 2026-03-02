@@ -131,6 +131,7 @@ createApp({
         const imagePreviews = ref({});
         const converterS2T = ref(null);
         const converterT2S = ref(null);
+        const isSidebarOpen = ref(false);
 
         const createWikiRenderer = (baseDir) => {
             const renderer = new marked.Renderer();
@@ -420,7 +421,7 @@ id: ${defaultID}
             currentPage, pageSize, totalPages, pagedList,
             changePage, jumpToPage, inputPage,
             editTitle, editSummary, editTags,
-            converterS2T, converterT2S,
+            converterS2T, converterT2S,isSidebarOpen
         };
     }
 }).mount('#app');
