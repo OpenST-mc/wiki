@@ -252,7 +252,7 @@ createApp({
                 }
                 const contentOnly = rawMd.replace(/^===\s*[\s\S]*?\s*===\s*/, '');
 
-                // 💡 修改：加载全文到编辑器（含头部），保持编辑连续性
+                // 加载全文到编辑器（含头部），保持编辑连续性
                 editContent.value = rawMd;
                 activeArticle.value = item;
 
@@ -293,7 +293,7 @@ createApp({
                 const fileName = item ? item.mdPath.split('/').pop() : 'index.md';
                 const root = zip.folder(folderName);
 
-                // 💡 改进提交逻辑：如果编辑内容本身已经有 === 头部，则不再重复拼接
+                // 如果编辑内容本身已经有 === 头部，则不再重复拼接
                 const finalContent = editContent.value.trim().startsWith('===')
                     ? editContent.value
                     : `===\ntitle: ${editTitle.value.trim()}\nsummary: ${item?.summary || editTitle.value.trim()}\ntags: [${(item?.tags || ['档案']).join(', ')}]\ncover: ${item?.cover || ''}\n===\n\n${editContent.value}`;
@@ -335,7 +335,7 @@ createApp({
         const toggleEdit = () => {
             if (!auth.value) return handleLogin();
 
-            // 新建文章时填充你要求的 YAML 模板
+            // 新建文章时填充 YAML 模板
             if (!activeArticle.value && !isEditing.value) {
                 const now = new Date().toISOString().split('T')[0];
                 const defaultID = `wiki-${Math.floor(Math.random() * 1000000000)}`;
