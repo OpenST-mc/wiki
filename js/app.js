@@ -4,6 +4,24 @@ const { createApp, ref, computed, onMounted, watch } = window.Vue;
 const WORKER_URL = 'https://openstsubmission.linvin.net';
 let globalImagePreviews = { value: {} };
 let globalBaseDir = '';
+window.copyCode = async (btn) => {
+    const pre = btn.parentElement;
+    const code = pre.querySelector('code').innerText;
+
+    try {
+        await navigator.clipboard.writeText(code);
+        const oldText = btn.innerText;
+        btn.innerText = 'COPIED!';
+        btn.classList.add('copied');
+
+        setTimeout(() => {
+            btn.innerText = oldText;
+            btn.classList.remove('copied');
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+    }
+};
 
 // --- 1. Markdown 渲染扩展 ---
 const maskExtension = {
@@ -24,6 +42,23 @@ marked.setOptions({
         return hljs.highlight(code, { language }).value;
     }
 });
+
+const customRenderer = {
+    // 💡 修复：代码块渲染
+    code(token) {
+        const code = token.text || '';
+        const lang = token.lang || '';
+        const validLang = (lang && hljs.getLanguage(lang)) ? lang : 'plaintext';
+        const highlighted = hljs.highlight(code, { language: validLang }).value;
+        return `<pre data-lang="${validLang.toUpperCase()}"><button class="copy-btn" onclick="window.copyCode(this)">Copy</button><code class="hljs language-${validLang}">${highlighted}</code></pre>`;
+    },
+    // 💡 修复：如果图片被识别为标准 Image 而非 imageCustom 扩展
+    image(token) {
+        // 直接复用你 imageCustom 的逻辑或者让它走统一路径
+        return this.imageCustom(token);
+    }
+};
+
 
 const imageCustomExtension = {
     name: 'imageCustom',
@@ -78,8 +113,14 @@ const imageCustomExtension = {
     }
 };
 
-// 记得注册
-marked.use({ extensions: [maskExtension, imageCustomExtension] });
+marked.use({
+    renderer: customRenderer,
+    extensions: [maskExtension, imageCustomExtension],
+    gfm: true,
+    breaks: true
+});
+
+
 
 createApp({
     setup() {

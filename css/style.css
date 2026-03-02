@@ -137,32 +137,44 @@ input:focus {
     position: relative;
 }
 
-/* 2. 列表样式 (UL/OL) - 解决层级不明的问题 */
-.markdown-body ul, .markdown-body ol {
-    padding-left: 1.5rem;
+/* 1. 基础容器：确保 list-style 不被重置为 none */
+.markdown-body ul { list-style-type: disc !important; }
+.markdown-body ol { list-style-type: decimal !important; }
+
+.markdown-body ul,
+.markdown-body ol {
+    padding-left: 2rem; /* 足够位移，防止符号飞出屏幕 */
     margin: 1rem 0;
 }
 
 .markdown-body li {
-    margin: 0.5rem 0;
-    line-height: 1.6;
+    display: list-item; /* 强制以列表项渲染，确保 marker 有效 */
+    margin: 0.6rem 0;
+    line-height: 1.7;
 }
 
-/* 无序列表圆点颜色 */
-.markdown-body ul li::marker {
-    color: var(--brand);
+/* 2. 嵌套逻辑：处理 1. 下面套 - 的情况 */
+.markdown-body li > ul,
+.markdown-body li > ol {
+    margin: 0.5rem 0 0.8rem 0.5rem;
+    padding-left: 1.5rem;
+    border-left: 1px solid rgba(64, 181, 173, 0.2); /* 品牌色引导线 */
 }
 
-/* 有序列表数字颜色 */
-.markdown-body ol li::marker {
+/* 自动切换嵌套符号：二级空心圆，三级方块 */
+.markdown-body li > ul { list-style-type: circle !important; }
+.markdown-body li > ul ul { list-style-type: square !important; }
+
+/* 3. 符号美化 (Marker) */
+.markdown-body li::marker {
     color: var(--brand);
     font-weight: bold;
 }
 
-/* 嵌套列表缩进 */
-.markdown-body li > ul, .markdown-body li > ol {
-    margin: 0.4rem 0 0.4rem 0.5rem;
-    border-left: 1px solid rgba(255,255,255,0.1);
+/* 4. 任务列表兼容 (针对带 Checkbox 的列表) */
+.markdown-body li:has(input[type="checkbox"]) {
+    list-style-type: none !important; /* 有复选框时隐藏原点 */
+    padding-left: 0;
 }
 
 /* 3. 强调与链接 */
@@ -201,4 +213,117 @@ input:focus {
     font-family: 'JetBrains Mono', monospace; /* 如果有的话 */
     font-size: 0.85em;
     vertical-align: middle;
+}
+/* 自定义提示容器 - 兼容常见的 Markdown 扩展格式 */
+.markdown-body .info, .markdown-body .warning, .markdown-body .danger {
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 8px;
+    border-left: 4px solid;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.markdown-body .info { border-color: var(--brand); color: #e2e8f0; }
+.markdown-body .warning { border-color: #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, 0.05); }
+.markdown-body .danger { border-color: #ef4444; color: #f87171; background: rgba(239, 68, 68, 0.05); }
+
+/* 脚注链接 */
+.markdown-body .footnote-ref {
+    font-size: 0.75em;
+    padding: 0 2px;
+    color: var(--brand);
+}
+
+/* 页面底部脚注区域 */
+.markdown-body .footnotes {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 0.9em;
+    color: #94a3b8;
+}
+
+.markdown-body blockquote::before {
+    content: "NOTE";
+    display: block;
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: var(--brand);
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+    opacity: 0.6;
+}
+
+.markdown-body a[href^="http"]::after {
+    content: " ↗";
+    font-size: 0.7em;
+    opacity: 0.5;
+}
+.markdown-body .hljs {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.markdown-body pre {
+    border-left: 3px solid var(--brand);
+}
+
+/* --- 代码块容器增强 --- */
+.markdown-body pre {
+    position: relative;
+    padding-top: 2.8rem !important; /* 给顶部的语言和按钮留出空间 */
+    border-radius: 12px;
+    overflow: visible; /* 允许按钮稍微溢出或准确定位 */
+}
+
+/* 1. 左上角语言标注 */
+.markdown-body pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--brand); /* 使用你的青色变量 */
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.5;
+}
+
+/* 2. 右上角复制按钮 */
+.copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: 900;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    z-index: 10;
+}
+
+.copy-btn:hover {
+    background: rgba(64, 181, 173, 0.1);
+    color: var(--brand);
+    border-color: rgba(64, 181, 173, 0.4);
+}
+
+/* 复制成功后的状态 */
+.copy-btn.copied {
+    color: #10b981;
+    border-color: #10b981;
+}
+
+/* 3. 内部 code 调整 */
+.markdown-body pre code {
+    background: transparent !important;
+    padding: 0 !important;
+    display: block;
+    overflow-x: auto;
 }
