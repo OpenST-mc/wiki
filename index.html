@@ -115,12 +115,35 @@
           <div class="flex justify-between items-center mb-12">
             <button @click="backToList" class="opacity-30 hover:opacity-100 uppercase tracking-widest text-[10px] font-black transition-all">← BACK_TO_LIST</button>
             <div class="flex gap-4">
-              <button @click="toggleEdit" class="..."> {{ isEditing ? '退出编辑' : '编辑文本' }} </button>
+              <button @click="toggleEdit" class="text-[10px] font-black border border-white/10 px-4 py-2 rounded uppercase tracking-widest hover:bg-white/5 transition-all">
+                {{ isEditing ? '退出编辑' : '编辑文本' }}
+              </button>
+              <button v-if="isEditing" @click="submitArchive" :disabled="isSubmitting"
+                      class="text-[10px] font-black bg-[#40B5AD] text-black px-4 py-2 rounded uppercase tracking-widest hover:shadow-[0_0_15px_#40B5AD] transition-all disabled:opacity-50">
+                {{ isSubmitting ? '正在提交...' : '保存更改' }}
+              </button>
             </div>
           </div>
 
-          <div v-if="isEditing">
+          <div v-if="isEditing" class="grid grid-cols-1 gap-12 animate-zoom">
+            <div class="flex items-center gap-6 pb-6 border-b border-white/5">
+              <button @click="triggerFileInput" class="text-[10px] font-bold text-[#40B5AD] uppercase tracking-tighter">📎 插入/上传图片</button>
+              <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleImageUpload">
+              <p class="text-[10px] opacity-30 uppercase italic">Markdown 支持实时预览</p>
+            </div>
+
+            <div class="space-y-8">
+      <textarea v-model="editContent"
+                class="w-full h-[60vh] bg-black/40 border border-white/10 rounded-2xl p-8 text-slate-300 font-mono text-sm focus:border-[#40B5AD]/40 outline-none transition-all shadow-inner leading-relaxed"
+                placeholder="在此输入 Markdown 内容..."></textarea>
+
+              <div class="pt-12 border-t border-white/5">
+                <h4 class="text-[10px] font-black opacity-20 uppercase tracking-[0.3em] mb-8 text-center">Live Preview</h4>
+                <article v-html="livePreviewContent" class="markdown-body opacity-80"></article>
+              </div>
+            </div>
           </div>
+
           <article v-else v-html="renderedContent" class="markdown-body animate-zoom pb-32"></article>
         </section>
 
