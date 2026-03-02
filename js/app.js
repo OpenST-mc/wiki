@@ -23,7 +23,7 @@ window.copyCode = async (btn) => {
     }
 };
 
-// --- 1. Markdown 渲染扩展 ---
+// 1. Markdown 渲染扩展
 const maskExtension = {
     name: 'mask',
     level: 'inline',
@@ -251,10 +251,11 @@ createApp({
                     editTags.value = metaStr.match(/tags:\s*\[(.*)\]/)?.[1] || (item.tags || []).join(', ');
                 }
                 const contentOnly = rawMd.replace(/^===\s*[\s\S]*?\s*===\s*/, '');
-                editContent.value = contentOnly;
+
+                // 💡 修改：加载全文到编辑器（含头部），保持编辑连续性
+                editContent.value = rawMd;
                 activeArticle.value = item;
 
-                // --- 修复阅读模式 ---
                 globalBaseDir = item.baseDir;
                 renderedContent.value = marked.parse(contentOnly);
 
@@ -291,8 +292,13 @@ createApp({
                 const folderName = item ? item.baseDir.replace(/\//g, '') : `archive-${Date.now()}`;
                 const fileName = item ? item.mdPath.split('/').pop() : 'index.md';
                 const root = zip.folder(folderName);
-                const fullContent = `===\ntitle: ${editTitle.value.trim()}\nsummary: ${item?.summary || editTitle.value.trim()}\ntags: [${(item?.tags || ['档案']).join(', ')}]\ncover: ${item?.cover || ''}\n===\n\n${editContent.value}`;
-                root.file(fileName, fullContent);
+
+                // 💡 改进提交逻辑：如果编辑内容本身已经有 === 头部，则不再重复拼接
+                const finalContent = editContent.value.trim().startsWith('===')
+                    ? editContent.value
+                    : `===\ntitle: ${editTitle.value.trim()}\nsummary: ${item?.summary || editTitle.value.trim()}\ntags: [${(item?.tags || ['档案']).join(', ')}]\ncover: ${item?.cover || ''}\n===\n\n${editContent.value}`;
+
+                root.file(fileName, finalContent);
                 if (Object.keys(localImages.value).length > 0) {
                     const imgFolder = root.folder("images");
                     for (const [name, fileObj] of Object.entries(localImages.value)) {
@@ -328,9 +334,21 @@ createApp({
 
         const toggleEdit = () => {
             if (!auth.value) return handleLogin();
+
+            // 新建文章时填充你要求的 YAML 模板
             if (!activeArticle.value && !isEditing.value) {
-                editTitle.value = "";
-                editContent.value = "";
+                const now = new Date().toISOString().split('T')[0];
+                const defaultID = `wiki-${Math.floor(Math.random() * 1000000000)}`;
+                editTitle.value = "新文章";
+                editContent.value = `===
+id: ${defaultID}
+简介: 请在此输入文章简介
+标签: 档案, 教学
+封面: logo.jpg
+上次修改日期: ${now}
+===
+
+# 请在此开始编写正文`;
                 isEditing.value = true;
             } else {
                 isEditing.value = !isEditing.value;
