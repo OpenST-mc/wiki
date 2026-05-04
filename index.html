@@ -138,6 +138,12 @@
               <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleImageUpload">
               <p class="text-[10px] opacity-30 uppercase italic">Markdown 支持实时预览</p>
             </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full" :class="editContent ? 'bg-green-500 animate-pulse' : 'bg-white/20'"></span>
+              <span class="text-[9px] uppercase opacity-40 font-black tracking-widest">
+              {{ editContent ? 'Draft Auto-Saving' : 'Standby' }}
+              </span>
+            </div>
             <div class="space-y-8">
               <div class="grid grid-cols-1 gap-6 mb-8 bg-white/5 p-8 rounded-2xl border border-white/10">
                 <div class="flex flex-col gap-2">
