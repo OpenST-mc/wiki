@@ -124,6 +124,11 @@ createApp({
             return marked.parse(contentOnly);
         });
 
+        const initNewArticleTemplate = () => {
+            const now = new Date().toISOString().split('T')[0];
+            editContent.value = `===\nid: wiki-${Date.now()}\ntitle: 新文章\nsummary: 请输入简介\ntags: [档案]\ncover: \nupdated: ${now}\n===\n\n# 新文章正文`;
+        };
+
         const toggleEdit = () => {
             if (!auth.value) return handleLogin();
             if (!activeArticle.value && !isEditing.value) {
@@ -131,8 +136,33 @@ createApp({
                 const now = new Date().toISOString().split('T')[0];
                 editContent.value = `===\nid: wiki-${Date.now()}\ntitle: 新文章\nsummary: 请输入简介\ntags: [档案]\ncover: logo.jpg\nupdated: ${now}\n===\n\n# 新文章正文`;
             }
+            // 如果准备进入编辑模式
+            if (!isEditing.value) {
+                const draftId = activeArticle.value ? activeArticle.value.id : 'new_article';
+                const savedDraft = localStorage.getItem(DRAFT_KEY + draftId);
+
+                if (savedDraft) {
+                    // 发现草稿，弹窗询问
+                    if (confirm('发现本地有未保存的草稿，是否恢复？')) {
+                        editContent.value = savedDraft;
+                    } else if (!activeArticle.value) {
+                        // 如果是新建文章且不恢复，则初始化模板
+                        initNewArticleTemplate();
+                    }
+                } else if (!activeArticle.value) {
+                    initNewArticleTemplate();
+                }
+            }
             isEditing.value = !isEditing.value;
         };
+
+        watch(editContent, (newContent) => {
+            if (isEditing.value && newContent) {
+                // 根据是“修改现有文章”还是“新建文章”决定存储 ID
+                const draftId = activeArticle.value ? activeArticle.value.id : 'new_article';
+                localStorage.setItem(DRAFT_KEY + draftId, newContent);
+            }
+        });
 
         const handleImageUpload = (e) => {
             const file = e.target.files[0];
@@ -169,6 +199,8 @@ createApp({
 
                 if (result.success) {
                     alert(`提交成功！Issue #${result.issueNumber}`);
+                    const draftId = activeArticle.value ? activeArticle.value.id : 'new_article';
+                    localStorage.removeItem(DRAFT_KEY + draftId)
                     isEditing.value = false;
                     clearTempData();
                 } else {
