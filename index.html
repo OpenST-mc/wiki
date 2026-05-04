@@ -91,9 +91,13 @@
 
     <div class="flex-1 max-w-[140px] sm:max-w-md px-2 sm:px-6 mobile-search-focus transition-all">
       <div class="relative group">
-        <input v-model="searchQuery" placeholder="搜索..."
-               class="w-full bg-white/5 border border-white/10 rounded-full py-2 px-10 text-[14px] focus:border-[#40B5AD]/40 outline-none transition-all">
+        <input v-model="searchQuery" placeholder="搜索文章、标签或使用 #..."
+               class="w-full bg-white/5 border border-white/10 rounded-full py-2 px-10 text-[14px] focus:border-[#40B5AD]/40 outline-none transition-all text-white">
         <span class="absolute left-3.5 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:text-[#40B5AD] text-xs">🔍</span>
+        <!-- 清空按钮 -->
+        <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-3.5 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100">
+          <i class="fas fa-times-circle"></i>
+        </button>
       </div>
     </div>
 
@@ -111,51 +115,9 @@
 
   <main id="main-content" class="pt-20 h-screen overflow-y-auto" ref="scrollRoot">
     <transition name="fade" mode="out-in">
-      <div :key="activeArticle ? 'detail' : 'list'" class="w-full">
-        <section v-if="!activeArticle && !isEditing" class="max-w-7xl mx-auto py-12 px-6">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-            <div v-for="item in pagedList" :key="item.id" @click="loadArticle(item)" class="archive-card group cursor-pointer relative">
-              <div v-if="item.pinned" class="absolute top-4 right-4 z-10 bg-[#40B5AD] text-black text-[10px] font-black px-2 py-0.5 rounded shadow-[0_0_10px_#40B5AD]">
-                置顶
-              </div>
-
-              <div class="aspect-[16/9] bg-[#1a1a1a] relative overflow-hidden rounded-t-[2rem]">
-                <img v-if="item.cover" :src="item.cover" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-transform duration-500 group-hover:scale-105">
-                <div v-else class="w-full h-full flex items-center justify-center text-white/5 font-black text-6xl">WIKI</div>
-              </div>
-
-              <div class="p-8">
-                <div class="flex flex-wrap gap-2 mb-4">
-                  <span v-for="tag in item.tags" class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#40B5AD]/10 text-[#40B5AD] uppercase">{{ tag }}</span>
-                </div>
-                <h3 class="font-bold text-xl text-white group-hover:text-[#40B5AD] transition-colors mb-3">{{ item.title }}</h3>
-                <p class="text-base text-slate-400 line-clamp-2">{{ item.summary }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="totalPages > 1" class="flex justify-center items-center gap-8 mt-16 pb-12">
-            <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1"
-                    class="flex items-center gap-2 px-4 py-2 opacity-40 hover:opacity-100 disabled:opacity-10 transition-all text-[11px] font-black uppercase tracking-widest">
-              <span class="text-lg">←</span> <span class="hidden sm:inline">上一页</span>
-            </button>
-
-            <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-sm">
-              <input type="number" v-model.number="inputPage" @keyup.enter="jumpToPage" @blur="jumpToPage"
-                     class="w-10 bg-transparent border-none outline-none focus:ring-0 p-0 text-center text-[#40B5AD] font-mono font-bold appearance-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                     style="background-color:#181818 !important; border: none !important; box-shadow: none !important; outline: none !important; -webkit-tap-highlight-color: transparent;">
-              <span class="opacity-20 text-[11px] font-bold select-none">/</span>
-              <span class="opacity-40 text-[11px] font-mono font-bold select-none">{{ totalPages }}</span>
-            </div>
-
-            <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages"
-                    class="flex items-center gap-2 px-4 py-2 opacity-40 hover:opacity-100 disabled:opacity-10 transition-all text-[11px] font-black uppercase tracking-widest">
-              <span class="hidden sm:inline">下一页</span> <span class="text-lg">→</span>
-            </button>
-          </div>
-        </section>
-
-        <section v-else class="max-w-4xl mx-auto py-16 px-6 relative">
+      <!-- 1. 详情页/编辑页模式 -->
+      <div v-if="activeArticle || isEditing" :key="'detail'" class="w-full">
+        <section class="max-w-4xl mx-auto py-16 px-6 relative">
           <div class="flex justify-between items-center mb-12">
             <button @click="backToList" class="opacity-30 hover:opacity-100 uppercase tracking-widest text-[10px] font-black transition-all">← BACK_TO_LIST</button>
             <div class="flex gap-4">
@@ -169,6 +131,7 @@
             </div>
           </div>
 
+          <!-- 编辑器 -->
           <div v-if="isEditing" class="grid grid-cols-1 gap-12 animate-zoom">
             <div class="flex items-center gap-6 pb-6 border-b border-white/5">
               <button @click="triggerFileInput" class="text-[10px] font-bold text-[#40B5AD] uppercase tracking-tighter">📎 插入/上传图片</button>
@@ -191,7 +154,97 @@
               </div>
             </div>
           </div>
+          <!-- 阅读器 -->
           <article v-else v-html="renderedContent" class="markdown-body animate-zoom pb-32"></article>
+        </section>
+      </div>
+
+      <!-- 2. 列表/搜索模式 -->
+      <div v-else :key="'list'" class="w-full">
+        <section class="max-w-7xl mx-auto py-12 px-6">
+
+          <!-- 【分支 A：搜索结果页】 -->
+          <div v-if="searchQuery" class="search-page-container animate-zoom">
+            <div class="mb-8 flex items-center justify-between text-sm text-white/40 border-b border-white/5 pb-4">
+              <span>找到 {{ searchAnalysis.total }} 个相关档案</span>
+            </div>
+
+            <!-- 精确匹配 -->
+            <div v-if="searchAnalysis.best.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div v-for="item in searchAnalysis.best" :key="item.id" @click="loadArticle(item)"
+                   class="archive-card group cursor-pointer border border-white/5 hover:border-[#40B5AD]/30 transition-all p-8">
+                <div class="flex justify-between items-center mb-3">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#40B5AD]/10 text-[#40B5AD]">{{ Math.round(item._score) }}% MATCH</span>
+                </div>
+                <h3 class="font-bold text-xl text-white group-hover:text-[#40B5AD] mb-3">{{ item.title }}</h3>
+                <p class="text-slate-400 line-clamp-2 text-sm">{{ item.summary }}</p>
+              </div>
+            </div>
+
+            <!-- 低相关建议 -->
+            <div v-if="searchAnalysis.low.length > 0" class="mt-16 mb-8">
+              <div class="relative py-4 flex items-center italic">
+                <div class="flex-grow border-t border-white/5"></div>
+                <span class="mx-4 text-[11px] text-white/20">可能相关的其他档案：</span>
+                <div class="flex-grow border-t border-white/5"></div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 opacity-50">
+                <div v-for="item in searchAnalysis.low" :key="item.id" @click="loadArticle(item)"
+                     class="p-4 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 hover:opacity-100 transition-all">
+                  <h4 class="text-sm font-medium text-white/80">{{ item.title }}</h4>
+                </div>
+              </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div v-if="searchAnalysis.total === 0" class="py-20 text-center text-white/40">
+              <p class="mb-6 font-mono tracking-widest uppercase">Null - No matching records</p>
+              <div class="flex flex-wrap justify-center gap-3">
+                <button v-for="item in searchAnalysis.suggestions" @click="loadArticle(item)" class="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs hover:border-[#40B5AD] text-white/60">
+                  # {{ item.title }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 分支 B：常规瀑布流（仅在没有搜索词时显示） -->
+          <div v-else>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+              <div v-for="item in pagedList" :key="item.id" @click="loadArticle(item)" class="archive-card group cursor-pointer relative">
+                <div v-if="item.pinned" class="absolute top-4 right-4 z-10 bg-[#40B5AD] text-black text-[10px] font-black px-2 py-0.5 rounded shadow-[0_0_10px_#40B5AD]">置顶</div>
+                <div class="aspect-[16/9] bg-[#1a1a1a] relative overflow-hidden rounded-t-[2rem]">
+                  <img v-if="item.cover" :src="item.cover" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-transform duration-500 group-hover:scale-105">
+                  <div v-else class="w-full h-full flex items-center justify-center text-white/5 font-black text-6xl">WIKI</div>
+                </div>
+                <div class="p-8">
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    <span v-for="tag in item.tags" class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#40B5AD]/10 text-[#40B5AD] uppercase">{{ tag }}</span>
+                  </div>
+                  <h3 class="font-bold text-xl text-white group-hover:text-[#40B5AD] transition-colors mb-3">{{ item.title }}</h3>
+                  <p class="text-base text-slate-400 line-clamp-2">{{ item.summary }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 分页器 -->
+            <div v-if="totalPages > 1" class="flex justify-center items-center gap-8 mt-16 pb-12">
+              <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1"
+                      class="flex items-center gap-2 px-4 py-2 opacity-40 hover:opacity-100 disabled:opacity-10 transition-all text-[11px] font-black uppercase tracking-widest">
+                <span class="text-lg">←</span> <span class="hidden sm:inline">上一页</span>
+              </button>
+              <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-sm">
+                <input type="number" v-model.number="inputPage" @keyup.enter="jumpToPage"
+                       class="w-10 bg-transparent border-none text-center text-[#40B5AD] font-mono font-bold outline-none">
+                <span class="opacity-20 text-[11px] font-bold">/</span>
+                <span class="opacity-40 text-[11px] font-mono font-bold">{{ totalPages }}</span>
+              </div>
+              <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages"
+                      class="flex items-center gap-2 px-4 py-2 opacity-40 hover:opacity-100 disabled:opacity-10 transition-all text-[11px] font-black uppercase tracking-widest">
+                <span class="hidden sm:inline">下一页</span> <span class="text-lg">→</span>
+              </button>
+            </div>
+          </div>
+
         </section>
       </div>
     </transition>
@@ -212,6 +265,6 @@
   </div>
 </div>
 
-<script src="js/app.js" type="module"></script>
+<script src="js/main.js" type="module"></script>
 </body>
 </html>
