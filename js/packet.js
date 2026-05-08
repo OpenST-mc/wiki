@@ -1,4 +1,4 @@
-const WORKER_URL = 'https://openstsubmission.linvin.net';
+const WORKER_URL = 'https://api.openstmc.com';
 
 export const ArchiveService = {
     async submit({ title, content, images, article, auth }) {

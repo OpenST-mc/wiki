@@ -1,7 +1,7 @@
 import { PortalAuth } from './auth.js';
 
 const { createApp, ref, computed, onMounted, watch } = window.Vue;
-const WORKER_URL = 'https://openstsubmission.linvin.net';
+const WORKER_URL = 'https://api.openstmc.com';
 let globalImagePreviews = { value: {} };
 let globalBaseDir = '';
 window.copyCode = async (btn) => {

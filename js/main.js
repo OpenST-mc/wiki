@@ -229,7 +229,7 @@ createApp({
         const checkIdentity = async () => {
             if (!auth.value) return;
             try {
-                const res = await fetch(`https://openstsubmission.linvin.net/api/check-admin`, {
+                const res = await fetch(`https://api.openstmc.com/api/check-admin`, {
                     headers: { 'Authorization': `Bearer ${auth.value.token}` }
                 });
                 const data = await res.json();
@@ -243,7 +243,7 @@ createApp({
             if (!code) return;
 
             try {
-                const res = await fetch(`https://openstsubmission.linvin.net/api/exchange-token?code=${code}`);
+                const res = await fetch(`https://api.openstmc.com/api/exchange-token?code=${code}`);
                 const data = await res.json();
                 if (data.access_token) {
                     await PortalAuth.save(data, true);
