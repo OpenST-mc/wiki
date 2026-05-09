@@ -8,7 +8,7 @@
       "教学",
       "基础"
     ],
-    "date": "2026-03-28",
+    "date": "2026-05-09",
     "cover": "wiki_content/如何贡献文章 或 修改文章/logo.jpg",
     "mdPath": "wiki_content/如何贡献文章 或 修改文章/贡献准则.md",
     "baseDir": "如何贡献文章 或 修改文章/",
@@ -23,7 +23,7 @@
       "教学",
       "基础"
     ],
-    "date": "2026-03-28",
+    "date": "2026-05-09",
     "cover": "wiki_content/OpenST wiki准则/logo.jpg",
     "mdPath": "wiki_content/OpenST wiki准则/introduction.md",
     "baseDir": "OpenST wiki准则/",
@@ -38,7 +38,7 @@
       "档案",
       "教学"
     ],
-    "date": "2026-03-28",
+    "date": "2026-05-09",
     "cover": "wiki_content/OpenST档案馆投稿注意事项/images/logo.jpg",
     "mdPath": "wiki_content/OpenST档案馆投稿注意事项/index.md",
     "baseDir": "OpenST档案馆投稿注意事项/",
@@ -52,7 +52,7 @@
     "tags": [
       "储电入门"
     ],
-    "date": "2026-03-28",
+    "date": "2026-05-09",
     "cover": "wiki_content/储电入门 - 分类器/images/logo.png",
     "mdPath": "wiki_content/储电入门 - 分类器/index.md",
     "baseDir": "储电入门 - 分类器/",
